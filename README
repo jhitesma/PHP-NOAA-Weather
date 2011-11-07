@@ -1,0 +1,107 @@
+Class: 	noaa_weather
+
+Description
+----------------------------
+Gets current and forecast weather data from weather.gov.  Using weather.gov recommendations, 
+a method is also provided which groups weather conditions and maps each group to a graphical weather icon.
+
+Dependencies
+----------------------------
+xmlize - https://github.com/rmccue/XMLize
+Used for de-serializing weather xml feeds
+
+Data sources
+----------------------------	
+DW Namespace: http://www.nws.noaa.gov/mdl/XML/Design/MDL_XML_Design.htm  
+Current Conditions: http://www.weather.gov/xml/current_obs/KBOS.xml
+Forecast: http://forecast.weather.gov/MapClick.php?lat=42.35830&lon=-71.06030&FcstType=dwml
+
+Suggested icon mappings: http://www.crh.noaa.gov/riw/?n=forecast_icons
+												 http://www.weather.gov/xml/current_obs/weather.php
+  
+Usage
+----------------------------
+
+See example.php
+
+CURRENT CONDITIONS
+
+I've only added summary, temp and the icon for current conditions.  
+Feel free to map the other line items from feed (e.g. wind speed, rel humidity etc)
+
+current_summary
+current_temp
+current_icon_default
+current_icon_custom
+
+the default icon is the one provided by NOAA.  I have added a method to map weather summaries to custom icons.  
+Calling current_icon_custom will grab the custom icon and override the default icon.
+
+FORECAST
+
+The forecast feed provided by NOAA is split up into night and day periods, 
+with low temps being grouped in the night periods and high temps in the day period.  
+Additionally, detailed conditions are provided in a 3rd period which lists both 
+days and nights.
+
+get_weather will create an associative array of time periods and the weather values.  It will copy both low and high temps into each day period for simplicity.
+E.g.  It will take the "Low" temp for "Wednesday Night" and copy it to "Wednesday"
+
+FORECAST WEATHER OBJECT
+
+object(noaa_weather)#1 (14) {
+  ["forecast"]=>
+  array(13) {
+    [0]=>
+    array(7) {
+      ["label"]=>
+      string(14) "This Afternoon"
+      ["summary"]=>
+      string(5) "Sunny"
+      ["forecast"]=>
+      string(53) "Sunny, with a high near 64. West wind around 11 mph. "
+      ["high"]=>
+      string(7) "64&deg;"
+      ["low"]=>
+      string(0) ""
+      ["icon_default"]=>
+      string(46) "http://forecast.weather.gov/images/wtf/skc.jpg"
+      ["icon_custom"]=>
+      string(41) "http://cdn.wbur.org/images/weather/68.jpg"
+    }
+    [1]=>
+    array(7) {
+      ["label"]=>
+      string(7) "Tonight"
+      ["summary"]=>
+      string(12) "Mostly Clear"
+      ["forecast"]=>
+      string(68) "Mostly clear, with a low around 44. West wind between 5 and 10 mph. "
+      ["high"]=>
+      string(0) ""
+      ["low"]=>
+      string(7) "44&deg;"
+      ["icon_default"]=>
+      string(47) "http://forecast.weather.gov/images/wtf/nfew.jpg"
+      ["icon_custom"]=>
+      string(41) "http://cdn.wbur.org/images/weather/66.jpg"
+    }
+    [2]=>
+    array(7) {
+      ["label"]=>
+      string(7) "Tuesday"
+      ["summary"]=>
+      string(12) "Mostly Sunny"
+      ["forecast"]=>
+      string(78) "Mostly sunny, with a high near 67. West wind around 6 mph becoming southeast. "
+      ["high"]=>
+      string(7) "67&deg;"
+      ["low"]=>
+      string(7) "45&deg;"
+      ["icon_default"]=>
+      string(46) "http://forecast.weather.gov/images/wtf/sct.jpg"
+      ["icon_custom"]=>
+      string(41) "http://cdn.wbur.org/images/weather/66.jpg"
+    }
+
+
