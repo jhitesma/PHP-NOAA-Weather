@@ -7,11 +7,6 @@
 	Gets current and forecast weather data from weather.gov.  Using weather.gov recommendations,
 	a method is also provided which groups weather conditions and maps each group to a graphical weather icon.
 
-	Dependencies
-	----------------------------
-	xmlize - https://github.com/rmccue/XMLize
-	Used for de-serializing weather xml feeds
-
 	Data sources
 	----------------------------
 	DW Namespace
@@ -29,13 +24,25 @@
 
 */
 
-require_once($home_path . 'includes/xmlize/xmlize.inc');
-
 class noaa_weather {
 
 	public $forecast = array();
-	public $feed_current,$feed_forecase,$icon_url_path,$current_temp, $current_summary, $current_icon, $do_current=1, $do_forecast=0;
-	private $xml, $min_temp, $max_temp, $min_label, $max_label, $main_label;
+	public $xml;
+	public $feed_current;
+	public $feed_forecast;
+	public $icon_url_path;
+	public $current_temp;
+	public $current_summary;
+	public $current_icon;
+	public $do_current=1;
+	public $do_forecast=0;
+	public $current;
+	
+	private $min_temp;
+	private $max_temp;
+	private $min_label;
+	private $max_label;
+	private $main_label;
 
 	public function get_weather() {
 		/* Populates public properties for current temp/summary and the forecast assoc. array */
@@ -67,8 +74,7 @@ class noaa_weather {
 				$url = $this->feed_current;
 				break;
 		}
-		$data = $this->get_data($url);
-		$this->xml = xmlize($data);
+		$this->xml = new SimpleXMLElement($this->get_data($url), NULL, FALSE);
 	}
 
 	/* In order to find out which section holds which layout, we need to find the layout-key child inside time-layout
@@ -211,13 +217,8 @@ class noaa_weather {
 
 	/* Format xml as current conditions box */
 	private function get_current() {
-
 		$this->get_xml('current');
-		$current = $this->xml["current_observation"];
-		$this->current_temp = intval($current['#']['temp_f'][0]['#']) . '&deg;';
-		$this->current_summary = $current['#']['weather'][0]['#'];
-		$this->current_icon_default = $current['#']['icon_url_base'][0]['#'] . $current['#']['icon_url_name'][0]['#'];
-		$this->current_icon_custom = $this->get_weather_icon( $current['#']['weather'][0]['#'] );
+		$this->current = $this->xml;
 	}
 
 	/*
