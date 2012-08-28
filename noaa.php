@@ -1,71 +1,52 @@
 <?php
-
 /*
 	Class: 	noaa_weather
-	
+
 	Description
 	----------------------------
-	Gets current and forecast weather data from weather.gov.  Using weather.gov recommendations, 
+	Gets current and forecast weather data from weather.gov.  Using weather.gov recommendations,
 	a method is also provided which groups weather conditions and maps each group to a graphical weather icon.
-	
+
 	Dependencies
 	----------------------------
 	xmlize - https://github.com/rmccue/XMLize
 	Used for de-serializing weather xml feeds
-	
+
 	Data sources
-	----------------------------	
+	----------------------------
 	DW Namespace
 		http://www.nws.noaa.gov/mdl/XML/Design/MDL_XML_Design.htm
-		
+
 	Current Conditions
 		http://www.weather.gov/xml/current_obs/KBOS.xml
-	
+
 	Forecast
 		http://forecast.weather.gov/MapClick.php?lat=42.35830&lon=-71.06030&FcstType=dwml
-	
+
 	Suggested Icon -> condition mappings
 		http://www.weather.gov/xml/current_obs/weather.php
-		http://www.crh.noaa.gov/riw/?n=forecast_icons	
+		http://www.crh.noaa.gov/riw/?n=forecast_icons
 
-*/	
+*/
 
-require_once('../../_inc/xmlize/xmlize.inc');
+require_once($home_path . 'includes/xmlize/xmlize.inc');
 
 class noaa_weather {
 
 	public $forecast = array();
-<<<<<<< HEAD
-<<<<<<< HEAD
 	public $current_temp, $current_summary, $current_icon;
 	private $xml, $min_temp, $max_temp, $min_label, $max_label, $main_label;
-	
-	const feed_current = "http://www.weather.gov/xml/current_obs/KBOS.xml";
-	const feed_forecast = "http://forecast.weather.gov/MapClick.php?lat=42.35830&lon=-71.06030&FcstType=dwml";
+
+	const feed_current = "http://www.weather.gov/xml/current_obs/KNYL.xml";
+	const feed_forecast = "http://forecast.weather.gov/MapClick.php?lat=lat=32.698762&lon=-114.6079&FcstType=dwml";
 	const icon_url_path = "http://cdn.wbur.org/images/weather/";
 
-=======
-	public $current_temp, $current_summary;
-=======
-	public $current_temp, $current_summary, $current_icon;
-	private $xml, $min_temp, $max_temp, $min_label, $max_label, $main_label;
->>>>>>> 558cc60... ...
-	
-	const feed_current = "http://www.weather.gov/xml/current_obs/KBOS.xml";
-	const feed_forecast = "http://forecast.weather.gov/MapClick.php?lat=42.35830&lon=-71.06030&FcstType=dwml";
-	const icon_url_path = "http://cdn.wbur.org/images/weather/";
-
-<<<<<<< HEAD
-	
->>>>>>> 14fb462... first commit
-=======
->>>>>>> 558cc60... ...
-	public function get_weather() {			
+	public function get_weather() {
 		/* Populates public properties for current temp/summary and the forecast assoc. array */
 		$this->get_current();
-		$this->get_forecast();		
+		$this->get_forecast();
 	}
-	
+
 	private function get_data($url)
 	{
 		$ch = curl_init();
@@ -77,53 +58,41 @@ class noaa_weather {
 		curl_close($ch);
 		return $data;
 	}
-	
-	private function get_xml($type) {		
+
+	private function get_xml($type) {
 		switch($type) {
 			case 'forecast':
-<<<<<<< HEAD
-<<<<<<< HEAD
-				$url = 	$this->feed_forecast;
-=======
 				$url = $this->feed_forecast;
->>>>>>> 14fb462... first commit
-=======
-				$url = 	$this->feed_forecast;
->>>>>>> 558cc60... ...
 				break;
 			case 'current':
 				$url = $this->feed_current;
 				break;
 			default;
 				$url = $this->feed_current;
-				break;		
+				break;
 		}
-
 		$data = $this->get_data($url);
-		$this->xml = xmlize($data);	
+		$this->xml = xmlize($data);
 	}
-	
-	
-	
-	/* In order to find out which section holds which layout, we need to find the layout-key child inside time-layout 
+
+	/* In order to find out which section holds which layout, we need to find the layout-key child inside time-layout
 	and match it to an attribute in the the data element */
 	private function get_layout() {
-		
+
 		$time_layouts = $this->xml["dwml"]["#"]["data"][0]["#"]["time-layout"];
 		$temps = $this->xml["dwml"]["#"]["data"][0]["#"]["parameters"][0]["#"]["temperature"];
-		
+
 		for($i = 0; $i < sizeof($time_layouts); $i++) {
-			
+
 			/* Find time_layout with more than 8 children, this is main layout */
 			if( sizeof( $time_layouts[$i]["#"]["start-valid-time"] ) > 8 ) {
 				$this->main_label = $i;
 			}
-			
-			/* Now loop through temperature elements and match up with temperature layouts */		
+
+			/* Now loop through temperature elements and match up with temperature layouts */
 			for($j = 0; $j < sizeof($temps); $j++) {
-				
-				if( $temps[$j]["@"]["time-layout"] == $time_layouts[$i]["#"]["layout-key"][0]["#"] ) {	
-				
+
+				if( $temps[$j]["@"]["time-layout"] == $time_layouts[$i]["#"]["layout-key"][0]["#"] ) {
 					switch( $temps[$j]["@"]["type"] ) {
 						case "minimum":
 							$this->min_temp = $j;
@@ -135,37 +104,26 @@ class noaa_weather {
 						default:
 							break;
 					}
-					
 				}
-				
-			}	
+			}
 		}
-		
 	}
-	
-	
-	/* Format xml as Forecast */
-	private function get_forecast() {	
 
-		$this->get_xml('forecast');	
+	/* Format xml as Forecast */
+	private function get_forecast() {
+
+		$this->get_xml('forecast');
 		$this->get_layout();
 		$x = $this->xml["dwml"]["#"]["data"][0]["#"];
-	
+
 		/* Labels, summary and forecasts each have 13 entries for current/day/night periods */
 		$labels = $x["time-layout"][$this->main_label]["#"]["start-valid-time"];
 		$summaries = $x["parameters"][0]["#"]["weather"]["0"]["#"]["weather-conditions"];
 		$forecasts = $x["parameters"][0]["#"]["wordedForecast"]["0"]["#"]["text"];
-<<<<<<< HEAD
-<<<<<<< HEAD
 		$icons = $x["parameters"][0]["#"]["conditions-icon"]["0"]["#"]["icon-link"];
-=======
->>>>>>> 14fb462... first commit
-=======
-		$icons = $x["parameters"][0]["#"]["conditions-icon"]["0"]["#"]["icon-link"];
->>>>>>> 558cc60... ...
-	
-		/* 
-			hi/low temps have 6-7 entries that match day or night periods, each in a different section of the xml doc 
+
+		/*
+			hi/low temps have 6-7 entries that match day or night periods, each in a different section of the xml doc
 			get_layout() matches the labels with the temp elements and writes the indexes to the 4 variables below
 		*/
 		$high_temps = $x["parameters"][0]["#"]["temperature"][$this->max_temp]["#"]["value"];
@@ -173,168 +131,111 @@ class noaa_weather {
 		$low_temps = $x["parameters"][0]["#"]["temperature"][$this->min_temp]["#"]["value"];
 		$low_labels = $x["time-layout"][$this->min_label]["#"]["start-valid-time"];
 
-		
 		/* High/Low temperature temp arrays */
 		$arr_high = array();
-		$arr_low = array();	
-		
-		
+		$arr_low = array();
+
 		/* Create label array for high temp */
-		for($i = 0; $i < sizeof($high_labels); $i++) {		
-			
+		for($i = 0; $i < sizeof($high_labels); $i++) {
 			$template = array(
 				'label' => $high_labels[$i]["@"]["period-name"],
 				'temp' => ''
-			);		
-			array_push($arr_high, $template);		
-		}	
-		/* Add temps to high temp array */
-		for($i = 0; $i < sizeof($high_temps); $i++) {	
-			$arr_high[$i]["temp"] = $high_temps[$i]["#"];		
+			);
+			array_push($arr_high, $template);
 		}
-		
-	
+
+		/* Add temps to high temp array */
+		for($i = 0; $i < sizeof($high_temps); $i++) {
+			$arr_high[$i]["temp"] = $high_temps[$i]["#"];
+		}
+
 		/* Create label array for low temp */
-		for($i = 0; $i < sizeof($low_labels); $i++) {		
-			
+		for($i = 0; $i < sizeof($low_labels); $i++) {
 			$template = array(
 				'label' => $low_labels[$i]["@"]["period-name"],
 				'temp' => ''
-			);		
-			array_push($arr_low, $template);		
+			);
+			array_push($arr_low, $template);
 		}
+
 		/* Add temps to low temp array */
-		for($i = 0; $i < sizeof($low_temps); $i++) {	
-			$arr_low[$i]["temp"] = $low_temps[$i]["#"];		
+		for($i = 0; $i < sizeof($low_temps); $i++) {
+			$arr_low[$i]["temp"] = $low_temps[$i]["#"];
 		}
-	
-		
+
 		/* Create MAIN array, add labels */
-		for($i = 0; $i < sizeof($labels); $i++) {		
+		for($i = 0; $i < sizeof($labels); $i++) {
 			$template = array(
 				'label' => $labels[$i]["@"]["period-name"],
 				'summary' => '',
 				'forecast' => '',
 				'high' => '',
-<<<<<<< HEAD
-<<<<<<< HEAD
 				'low' => '',
 				'icon_default' => '',
 				'icon_custom' => ''
-=======
-				'low' => ''
->>>>>>> 14fb462... first commit
-=======
-				'low' => '',
-				'icon_default' => '',
-				'icon_custom' => ''
->>>>>>> 558cc60... ...
-			);		
-			array_push($this->forecast, $template);		
+			);
+			array_push($this->forecast, $template);
 		}
+
 		/* add weather summary to main array  */
-		for($i = 0; $i < sizeof($summaries); $i++) {	
-<<<<<<< HEAD
-<<<<<<< HEAD
+		for($i = 0; $i < sizeof($summaries); $i++) {
 			$this->forecast[$i]["summary"] = $summaries[$i]["@"]["weather-summary"];
-			$this->forecast[$i]["icon_default"] = $icons[$i]["#"];			
+			$this->forecast[$i]["icon_default"] = $icons[$i]["#"];
 			$this->forecast[$i]["icon_custom"] = $this->get_weather_icon( $summaries[$i]["@"]["weather-summary"] );
-=======
-			$this->forecast[$i]["summary"] = $summaries[$i]["@"]["weather-summary"];		
->>>>>>> 14fb462... first commit
-=======
-			$this->forecast[$i]["summary"] = $summaries[$i]["@"]["weather-summary"];
-			$this->forecast[$i]["icon_default"] = $icons[$i]["#"];			
-			$this->forecast[$i]["icon_custom"] = $this->get_weather_icon( $summaries[$i]["@"]["weather-summary"] );
->>>>>>> 558cc60... ...
 		}
+
 		/* add forecast to main array  */
-		for($i = 0; $i < sizeof($forecasts); $i++) {	
-			$this->forecast[$i]["forecast"] = $forecasts[$i]["#"];		
+		for($i = 0; $i < sizeof($forecasts); $i++) {
+			$this->forecast[$i]["forecast"] = $forecasts[$i]["#"];
 		}
-		
-		
+
 		/* Loop through each period in main array */
 		for($i = 0; $i < sizeof($this->forecast); $i++) {
-			
+
 			/* Assign HIGH temp */
 			foreach($arr_high as $h) {
 				/* if temp label = main label, assign temp */
 				if( $h["label"] == $this->forecast[$i]["label"] )
 					$this->forecast[$i]["high"] = $h["temp"] . '&deg;';
 			}
-	
+
 			/* Assign LOW temp */
 			foreach($arr_low as $l) {
 				/* if temp label = main label, assign temp */
 				if( $l["label"] == $this->forecast[$i]["label"] )
 					$this->forecast[$i]["low"] = $l["temp"] . '&deg;';
-	
+
 				/* Add low temps to non-Night entries */
 				if( $l["label"] == $this->forecast[$i]["label"] . " Night" )
 					$this->forecast[$i]["low"] = $l["temp"] . '&deg;';
-	
 			}
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-			
-			/* Finally, delete all "nights" because this is a forecast*/
->>>>>>> 14fb462... first commit
-=======
->>>>>>> 558cc60... ...
-	
-		}			
-	
+		}
 	}
-	
-	
+
+
 	/* Format xml as current conditions box */
 	private function get_current() {
-	
-		$this->get_xml('current');	
-		$current = $this->xml["current_observation"];		
+
+		$this->get_xml('current');
+		$current = $this->xml["current_observation"];
 		$this->current_temp = intval($current['#']['temp_f'][0]['#']) . '&deg;';
 		$this->current_summary = $current['#']['weather'][0]['#'];
-<<<<<<< HEAD
-<<<<<<< HEAD
 		$this->current_icon_default = $current['#']['icon_url_base'][0]['#'] . $current['#']['icon_url_name'][0]['#'];
 		$this->current_icon_custom = $this->get_weather_icon( $current['#']['weather'][0]['#'] );
-=======
->>>>>>> 14fb462... first commit
-=======
-		$this->current_icon_default = $current['#']['icon_url_base'][0]['#'] . $current['#']['icon_url_name'][0]['#'];
-		$this->current_icon_custom = $this->get_weather_icon( $current['#']['weather'][0]['#'] );
->>>>>>> 558cc60... ...
 	}
-	
-	
-	/* 
-		Map summary/conditions with graphical representation. 
+
+	/*
+		Map summary/conditions with graphical representation.
 		Source: http://www.weather.gov/xml/current_obs/weather.php
-		
-<<<<<<< HEAD
-<<<<<<< HEAD
-		Evidently, the list provided in the link above is not complete.  I have discovered some basic summaries not included 
+
+		Evidently, the list provided in the link above is not complete.  I have discovered some basic summaries not included
 		and have added them manually.  More summaries may needed to be added.
-	*/
-	private function get_weather_icon($summary) {
-=======
-		Evidently, the list provided in the link above is not complete.  
 		TODO:  Change function to match words and choose icon
 			E.g.  If summary contains "fog/haze/smoke", use x.jpg
 	*/
-	public function get_weather_icon($summary) {
->>>>>>> 14fb462... first commit
-=======
-		Evidently, the list provided in the link above is not complete.  I have discovered some basic summaries not included 
-		and have added them manually.  More summaries may needed to be added.
-	*/
 	private function get_weather_icon($summary) {
->>>>>>> 558cc60... ...
-		
 		$icon = "";
-		
+
 		switch($summary) {
 			/* Mostly Cloudy | Mostly Cloudy with Haze | Mostly Cloudy and Breezy */
 			case "Mostly Cloudy":
@@ -342,18 +243,10 @@ class noaa_weather {
 			case "Mostly Cloudy and Breezy":
 				$icon = "69.jpg";
 				break;
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-=======
->>>>>>> 14fb462... first commit
-=======
-
->>>>>>> 558cc60... ...
-				
 			/* Fair | Clear | Fair with Haze | Clear with Haze | Fair and Breezy | Clear and Breezy */
 			case "Fair":
-			case "Clear":			
+			case "Clear":
 			case "Fair with Haze":
 			case "Clear with Haze":
 			case "Fair and Breezy":
@@ -361,7 +254,7 @@ class noaa_weather {
 			case "Sunny":
 				$icon = "68.jpg";
 				break;
-			
+
 			/* A Few Clouds | A Few Clouds with Haze | A Few Clouds and Breezy */
 			case "A Few Clouds":
 			case "A Few Clouds with Haze":
@@ -370,21 +263,21 @@ class noaa_weather {
 			case "Mostly Clear":	/* Added manually */
 				$icon = "66.jpg";
 				break;
-	
+
 			/* Partly Cloudy | Partly Cloudy with Haze | Partly Cloudy and Breezy */
 			case "Partly Cloudy":
 			case "Partly Cloudy with Haze":
 			case "Partly Cloudy and Breezy":
 				$icon = "66.jpg";
 				break;
-	
+
 			/* Overcast | Overcast with Haze | Overcast and Breezy */
 			case "Overcast":
 			case "Overcast with Haze":
 			case "Overcast and Breezy":
 				$icon = "67.jpg";
 				break;
-	
+
 			/* Fog/Mist | Fog | Freezing Fog | Shallow Fog | Partial Fog | Patches of Fog | Fog in Vicinity
 			Freezing Fog in Vicinity | Shallow Fog in Vicinity | Partial Fog in Vicinity | Patches of Fog in Vicinity
 			Showers in Vicinity Fog | Light Freezing Fog | Heavy Freezing Fog */
@@ -404,12 +297,12 @@ class noaa_weather {
 			case "Heavy Freezing Fog":
 				$icon = "70.jpg";
 				break;
-	
+
 			// Smoke
 			case "Smoke":
 				$icon = "70.jpg";
 				break;
-	
+
 			/* Freezing Rain | Freezing Drizzle | Light Freezing Rain | Light Freezing Drizzle
 				Heavy Freezing Rain | Heavy Freezing Drizzle | Freezing Rain in Vicinity | Freezing Drizzle in Vicinity */
 			case "Freezing Rain":
@@ -422,8 +315,8 @@ class noaa_weather {
 			case "Freezing Drizzle in Vicinity":
 				$icon = "76.jpg";
 				break;
-	
-	
+
+
 			/* Ice Pellets | Light Ice Pellets | Heavy Ice Pellets | Ice Pellets in Vicinity
 				Showers Ice Pellets | Thunderstorm Ice Pellets | Ice Crystals | Hail | Small Hail/Snow Pellets
 				Light Small Hail/Snow Pellets | Heavy small Hail/Snow Pellets | Showers Hail | Hail Showers */
@@ -442,7 +335,7 @@ class noaa_weather {
 			case "Hail Showers":
 				$icon = "89.jpg";
 				break;
-				
+
 			/* Freezing Rain Snow | Light Freezing Rain Snow | Heavy Freezing Rain Snow | Freezing Drizzle Snow
 				Light Freezing Drizzle Snow | Heavy Freezing Drizzle Snow | Snow Freezing Rain | Light Snow Freezing Rain
 				Heavy Snow Freezing Rain | Snow Freezing Drizzle | Light Snow Freezing Drizzle | Heavy Snow Freezing Drizzle */
@@ -460,7 +353,7 @@ class noaa_weather {
 			case "Heavy Snow Freezing Drizzle":
 				$icon = "79.jpg";
 				break;
-	
+
 			/* Rain Ice Pellets | Light Rain Ice Pellets | Heavy Rain Ice Pellets | Drizzle Ice Pellets
 				Light Drizzle Ice Pellets	|	Heavy Drizzle Ice Pellets | Ice Pellets Rain | Light Ice Pellets Rain
 				Heavy Ice Pellets Rain | Ice Pellets Drizzle | Light Ice Pellets Drizzle | Heavy Ice Pellets Drizzle */
@@ -478,7 +371,7 @@ class noaa_weather {
 			case "Heavy Ice Pellets Drizzle":
 				$icon = "89.jpg";
 				break;
-	
+
 			/* Rain Snow | Light Rain Snow | Heavy Rain Snow | Snow Rain | Light Snow Rain | Heavy Snow Rain | Drizzle Snow
 				Light Drizzle Snow | Heavy Drizzle Snow | Snow Drizzle | Light Snow Drizzle | Heavy Drizzle Snow */
 			case "Rain Snow":
@@ -496,7 +389,7 @@ class noaa_weather {
 			case "Chance Rain/Snow": /* Added Manually */
 				$icon = "79.jpg";
 				break;
-	
+
 			/* Rain Showers | Light Rain Showers | Light Rain and Breezy | Heavy Rain Showers | Rain Showers in Vicinity
 				Light Showers Rain | Heavy Showers Rain | Showers Rain | Showers Rain in Vicinity | Rain Showers Fog/Mist
 				Light Rain Showers Fog/Mist | Heavy Rain Showers Fog/Mist | Rain Showers in Vicinity Fog/Mist
@@ -523,7 +416,7 @@ class noaa_weather {
 			case "Chance Showers": /* Added manually */
 				$icon = "76.jpg";
 				break;
-	
+
 			/* Thunderstorm | Thunderstorm Rain | Light Thunderstorm Rain | Heavy Thunderstorm Rain
 				Thunderstorm Rain Fog/Mist | Light Thunderstorm Rain Fog/Mist | Heavy Thunderstorm Rain Fog and Windy
 				Heavy Thunderstorm Rain Fog/Mist | Thunderstorm Showers in Vicinity | Light Thunderstorm Rain Haze
@@ -601,7 +494,7 @@ class noaa_weather {
 			case "Heavy Thunderstorm Rain Small Hail/Snow Pellets":
 				$icon = "84.jpg";
 				break;
-	
+
 			/* Snow | Light Snow | Heavy Snow | Snow Showers | Light Snow Showers | Heavy Snow Showers | Showers Snow
 				Light Showers Snow | Heavy Showers Snow | Snow Fog/Mist | Light Snow Fog/Mist | Heavy Snow Fog/Mist
 				Snow Showers Fog/Mist | Light Snow Showers Fog/Mist | Heavy Snow Showers Fog/Mist | Showers Snow Fog/Mist
@@ -615,8 +508,8 @@ class noaa_weather {
 				Blowing Snow in Vicinity */
 			case "Snow":
 			case "Heavy Snow":
-			case "Heavy Snow Showers":			
-			case "Light Snow":			
+			case "Heavy Snow Showers":
+			case "Light Snow":
 			case "Snow Showers":
 			case "Light Snow Showers":
 			case "Light Showers Snow":
@@ -633,20 +526,20 @@ class noaa_weather {
 			case "Light Snow Grains":
 				$icon = "77.jpg";
 				break;
-				
-			case "Showers Snow":			
+
+			case "Showers Snow":
 			case "Heavy Showers Snow":
-			case "Snow Fog/Mist":			
+			case "Snow Fog/Mist":
 			case "Heavy Snow Fog/Mist":
-			case "Snow Showers Fog/Mist":			
+			case "Snow Showers Fog/Mist":
 			case "Heavy Snow Showers Fog/Mist":
-			case "Showers Snow Fog/Mist":			
+			case "Showers Snow Fog/Mist":
 			case "Heavy Showers Snow Fog/Mist":
-			case "Snow Fog":			
+			case "Snow Fog":
 			case "Heavy Snow Fog":
-			case "Snow Showers Fog":			
+			case "Snow Showers Fog":
 			case "Heavy Snow Showers Fog":
-			case "Showers Snow Fog":			
+			case "Showers Snow Fog":
 			case "Heavy Showers Snow Fog":
 			case "Showers in Vicinity Snow":
 			case "Snow Showers in Vicinity":
@@ -658,15 +551,15 @@ class noaa_weather {
 			case "Snow Blowing Snow":
 			case "Heavy Snow Low Drifting Snow":
 			case "Heavy Snow Blowing Snow":
-			case "Thunderstorm Snow":			
+			case "Thunderstorm Snow":
 			case "Heavy Thunderstorm Snow":
-			case "Snow Grains":			
+			case "Snow Grains":
 			case "Heavy Snow Grains":
 			case "Heavy Blowing Snow":
 			case "Blowing Snow in Vicinity":
 				$icon = "83.jpg";
 				break;
-	
+
 			/* Windy | Breezy | Fair and Windy | A Few Clouds and Windy | Partly Cloudy and Windy
 				Mostly Cloudy and Windy | Overcast and Windy */
 			case "Windy":
@@ -678,7 +571,7 @@ class noaa_weather {
 			case "Overcast and Windy":
 				$icon = "66.jpg";
 				break;
-	
+
 			/* Showers in Vicinity | Showers in Vicinity Fog/Mist | Showers in Vicinity Fog | Showers in Vicinity Haze */
 			case "Showers in Vicinity":
 			case "Showers in Vicinity Fog/Mist":
@@ -686,7 +579,7 @@ class noaa_weather {
 			case "Showers in Vicinity Haze":
 				$icon = "76.jpg";
 				break;
-	
+
 			/* Freezing Rain Rain | Light Freezing Rain Rain | Heavy Freezing Rain Rain | Rain Freezing Rain
 				Light Rain Freezing Rain | Heavy Rain Freezing Rain | Freezing Drizzle Rain | Light Freezing Drizzle Rain
 				Heavy Freezing Drizzle Rain | Rain Freezing Drizzle | Light Rain Freezing Drizzle | Heavy Rain Freezing Drizzle */
@@ -704,14 +597,14 @@ class noaa_weather {
 			case "Heavy Rain Freezing Drizzle":
 				$icon = "82.jpg";
 				break;
-	
+
 			/* Thunderstorm in Vicinity | Thunderstorm in Vicinity Fog | Thunderstorm in Vicinity Haze */
 			case "Thunderstorm in Vicinity":
 			case "Thunderstorm in Vicinity Fog":
 			case "Thunderstorm in Vicinity Haze":
 				$icon = "84.jpg";
 				break;
-	
+
 			/* Light Rain | Drizzle | Light Drizzle | Heavy Drizzle | Light Rain Fog/Mist | Drizzle Fog/Mist
 				Light Drizzle Fog/Mist | Heavy Drizzle Fog/Mist | Light Rain Fog | Drizzle Fog | Light Drizzle Fog
 				Heavy Drizzle Fog */
@@ -729,7 +622,7 @@ class noaa_weather {
 			case "Heavy Drizzle Fog":
 				$icon = "76.jpg";
 				break;
-	
+
 			/* Rain | Heavy Rain | Rain Fog/Mist | Heavy Rain Fog/Mist | Rain Fog | Heavy Rain Fog */
 			case "Rain":
 			case "Heavy Rain":
@@ -739,14 +632,14 @@ class noaa_weather {
 			case "Heavy Rain Fog":
 				$icon = "82.jpg";
 				break;
-	
+
 			/* Funnel Cloud | Funnel Cloud in Vicinity | Tornado/Water Spout */
 			case "Funnel Cloud":
 			case "Funnel Cloud in Vicinity":
 			case "Tornado/Water Spout":
 				$icon = "84.jpg";
 				break;
-	
+
 			/* Dust | Low Drifting Dust | Blowing Dust | Sand | Blowing Sand | Low Drifting Sand | Dust/Sand Whirls
 				Dust/Sand Whirls in Vicinity | Dust Storm | Heavy Dust Storm | Dust Storm in Vicinity | Sand Storm
 				Heavy Sand Storm | Sand Storm in Vicinity */
@@ -766,30 +659,18 @@ class noaa_weather {
 			case "Sand Storm in Vicinity":
 				$icon = "70.jpg";
 				break;
-	
+
 			/* Haze */
 			case "Haze":
 				$icon = "70.jpg";
 				break;
-				
+
 			default:
 				$icon = "66.jpg"; /* Partly cloudy */
 				break;
 		}
-		
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 		return $this->icon_url_path . $icon;
-=======
-		return $icon;
->>>>>>> 14fb462... first commit
-=======
-		return $this->icon_url_path . $icon;
->>>>>>> 558cc60... ...
-		
 	}
-
 }
-
-
 ?>
