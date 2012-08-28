@@ -34,17 +34,13 @@ require_once($home_path . 'includes/xmlize/xmlize.inc');
 class noaa_weather {
 
 	public $forecast = array();
-	public $current_temp, $current_summary, $current_icon;
+	public $feed_current,$feed_forecase,$icon_url_path,$current_temp, $current_summary, $current_icon, $do_current=1, $do_forecast=0;
 	private $xml, $min_temp, $max_temp, $min_label, $max_label, $main_label;
-
-	const feed_current = "http://www.weather.gov/xml/current_obs/KNYL.xml";
-	const feed_forecast = "http://forecast.weather.gov/MapClick.php?lat=lat=32.698762&lon=-114.6079&FcstType=dwml";
-	const icon_url_path = "http://cdn.wbur.org/images/weather/";
 
 	public function get_weather() {
 		/* Populates public properties for current temp/summary and the forecast assoc. array */
-		$this->get_current();
-		$this->get_forecast();
+		if ($this->do_current) {$this->get_current();}
+		if ($this->do_forecast) {$this->get_forecast();}
 	}
 
 	private function get_data($url)
