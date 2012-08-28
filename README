@@ -5,11 +5,6 @@ Description
 Gets current and forecast weather data from weather.gov.  Using weather.gov recommendations, 
 a method is also provided which groups weather conditions and maps each group to a graphical weather icon.
 
-Dependencies
-----------------------------
-xmlize - https://github.com/rmccue/XMLize
-Used for de-serializing weather xml feeds
-
 Data sources
 ----------------------------	
 DW Namespace: http://www.nws.noaa.gov/mdl/XML/Design/MDL_XML_Design.htm  

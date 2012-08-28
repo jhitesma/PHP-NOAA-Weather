@@ -12,7 +12,7 @@ $ww->icon_url_path = 'http://cdn.wbur.org/images/weather/';
 
 /* enable/disable current and/or forecast options */
 $ww->do_current = 1;
-$ww->do_forecast = 0;
+$ww->do_forecast = 1;
 
 /* get data */
 $ww->get_weather();
@@ -24,7 +24,6 @@ print $ww->current->weather . "<br>\n";
 print $ww->current->temperature_string . "<br>\n";
 print 'Wind: ' . $ww->current->wind_string . "<br>\n";
 print 'Humidity: ' . $ww->current->relative_humidity . "<br>\n";
-
 print '<hr>';
 ?>
 		<div id="weather_test">
@@ -50,7 +49,7 @@ print '<hr>';
 			<!--<h3>Forecast</h3>-->
 			<? 
 			$fc = 1;
-			foreach ($weather_data['forecast_conditions'] as $forecast) { 
+			foreach ($ww->forecast as $forecast) { 
 				if ($fc>1) { 
 					?>
 					<div class="weather" style="display:inline; text-align:center; margin:10px 5px; width:65px; float:left;">
@@ -68,22 +67,36 @@ print '<hr>';
 		</div>
 	</div>
 <?
-
-
 print '<br clear="all"><hr>';
 print 'All available current conditions:' . "<br>";
 foreach($ww->current as $title => $value) {
 	print '<b>' . $title . ':</b>&nbsp;' . $value . "<br>\n";
 }
 
+echo $ww->xml;
+
+foreach ($ww->forecast as $item => $value) {
+	if ($item == 'head') {
+		echo 'Head: ' . "<br>\n";
+		foreach ($value as $i => $v) {
+			echo '<b>' . $i . ':</b> ' . $v . "<br>\n";
+		}
+	}
+	else {
+		echo 'data: ' . "<br>\n";
+		foreach ($value as $i => $v) {
+			echo '<b>' . $i . ':</b> ' . $v. "<br>\n";
+		}
+	}
+}
 
 
-
-
-
+echo '<pre>' . var_dump($ww->forecast,1) . '</pre>';
 
 /* print forecast via loop of array */
 foreach($ww->forecast as $t) {
 	$output .= '<li><img border="0" src="' . $t["icon_default"] . '" width="52" height="52" alt="' . $t["forecast"] . '" />' . $t["label"] . ' - ' . $t["forecast"] . '</li>';
 }
 print '<ul>' . $output . '</ul>';
+
+?>
