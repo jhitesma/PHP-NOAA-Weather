@@ -41,12 +41,13 @@ class noaa_weather {
 
 	public $feed_current = 'http://www.weather.gov/xml/current_obs/KNYL.xml';
 	public $feed_forecast = 'http://forecast.weather.gov/MapClick.php?lat=32.698762&lon=-114.6079&FcstType=dwml';
+	public $icon_url_path = 'http://cdn.wbur.org/images/weather/';
 	public $do_current = 1;
 	public $do_forecast = 1;
 	public $current;
 	public $forecast = array();
 
-	public $xml;
+	private $xml;
 	private $now;
 	private $cache_path;
 	private $xml_cache_time;
@@ -142,11 +143,7 @@ class noaa_weather {
 
 			/* Now loop through temperature elements and match up with temperature layouts */
 			for($j = 0; $j < count($temps); $j++) {
-					echo 'j: ' . $j . ' i: ' . $i . ' m1: ' . $temps[$j]['time-layout'] . "<BR>\n";
-					echo 'j: ' . $j . ' i: ' . $i . ' m2: ' . $time_layouts[$i]->{'layout-key'} . "<BR>\n";
-#					echo 'type: ' . $temps[$j]['type'] . "<BR>\n";
-				if( $temps[$j]['time-layout'] == $time_layouts[$i]->{'layout-key'} ) {
-					echo 'MATCH';
+				if((string) $temps[$j]['time-layout'] == (string)$time_layouts[$i]->{'layout-key'} ) {
 					switch( $temps[$j]['type'] ) {
 						case "minimum":
 							$this->min_temp = $j;
@@ -180,10 +177,11 @@ class noaa_weather {
 			hi/low temps have 6-7 entries that match day or night periods, each in a different section of the xml doc
 			get_layout() matches the labels with the temp elements and writes the indexes to the 4 variables below
 		*/
-		$high_temps = $x{'parameters'}[0]->{'temperature'}[$this->max_temp]->{'value'};
-		$high_labels = $x{'time-layout'}[$this->max_label]->{'start-valid-time'};
-		$low_temps = $x{'parameters'}[0]->{'temperature'}[$this->min_temp]->{'value'};
-		$low_labels = $x{'time-layout'}[$this->min_label]->{'start-valid-time'};
+		
+		$high_temps = $x->{'parameters'}[0]->{'temperature'}[$this->max_temp]->{'value'};
+		$high_labels = $x->{'time-layout'}[$this->max_label]->{'start-valid-time'};
+		$low_temps = $x->{'parameters'}[0]->{'temperature'}[$this->min_temp]->{'value'};
+		$low_labels = $x->{'time-layout'}[$this->min_label]->{'start-valid-time'};
 
 		/* High/Low temperature temp arrays */
 		$arr_high = array();
@@ -192,7 +190,7 @@ class noaa_weather {
 		/* Create label array for high temp */
 		for($i = 0; $i < count($high_labels); $i++) {
 			$template = array(
-				'label' => $high_labels[$i]->{"period-name"},
+				'label' => (string)$high_labels[$i]{"period-name"},
 				'temp' => ''
 			);
 			array_push($arr_high, $template);
@@ -200,13 +198,13 @@ class noaa_weather {
 
 		/* Add temps to high temp array */
 		for($i = 0; $i < count($high_temps); $i++) {
-			$arr_high[$i]["temp"] = $high_temps[$i];
+			$arr_high[$i]["temp"] = (string)$high_temps[$i];
 		}
 
 		/* Create label array for low temp */
 		for($i = 0; $i < count($low_labels); $i++) {
 			$template = array(
-				'label' => $low_labels[$i]->{"period-name"},
+				'label' => (string)$low_labels[$i]{"period-name"},
 				'temp' => ''
 			);
 			array_push($arr_low, $template);
@@ -214,7 +212,7 @@ class noaa_weather {
 
 		/* Add temps to low temp array */
 		for($i = 0; $i < count($low_temps); $i++) {
-			$arr_low[$i]["temp"] = $low_temps[$i];
+			$arr_low[$i]["temp"] = (string)$low_temps[$i];
 		}
 
 		/* Create MAIN array, add labels */
@@ -245,22 +243,21 @@ class noaa_weather {
 
 		/* Loop through each period in main array */
 		for($i = 0; $i < count($this->forecast); $i++) {
-
 			/* Assign HIGH temp */
 			foreach($arr_high as $h) {
 				/* if temp label = main label, assign temp */
-				if( $h["label"] == $this->forecast[$i]["label"] )
+				if((string) $h["label"] == (string)$this->forecast[$i]["label"] )
 					$this->forecast[$i]["high"] = $h["temp"] . '&deg;';
 			}
 
 			/* Assign LOW temp */
 			foreach($arr_low as $l) {
 				/* if temp label = main label, assign temp */
-				if( $l["label"] == $this->forecast[$i]["label"] )
+				if((string) $l["label"] == (string)$this->forecast[$i]["label"] )
 					$this->forecast[$i]["low"] = $l["temp"] . '&deg;';
 
 				/* Add low temps to non-Night entries */
-				if( $l["label"] == $this->forecast[$i]["label"] . " Night" )
+				if((string) $l["label"] == (string)$this->forecast[$i]["label"] . " Night" )
 					$this->forecast[$i]["low"] = $l["temp"] . '&deg;';
 			}
 		}

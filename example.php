@@ -50,16 +50,17 @@ print '<hr>';
 			</div>
 			<!--<h3>Forecast</h3>-->
 			<? 
+			$fc=1;
 			foreach ($ww->forecast as $forecast) { 
-				if ($fc < 3) { 
+				if (($fc < 4) and ($fc > 1)) { 
 					?>
 					<div class="weather" style="display:inline; text-align:center; margin:10px 5px; width:65px; float:left;">
 					<div><span style="font-size:8pt; line-height:12pt;"><b><?= $forecast['label']; ?></b></span></div>
 					<img src="<?=$forecast['icon_default']?>" alt="weather"?>
 					<br>
 						<span class="condition">
-							<span style="color:#000000; font-size:9pt;"><?= $forecast['high'] ?>&deg;</span> <span style="color:#6699CC; font-size:9pt;"><?= $forecast['low'] ?>&deg;</span>
-							<?= $forecast['summary'] ?>
+							<span style="color:#000000; font-size:9pt;"><?= $forecast['high'] ?></span> <span style="color:#6699CC; font-size:9pt;"><?= $forecast['low'] ?></span>
+							<!--<?= $forecast['summary'] ?>-->
 						</span>
 					</div>
 				<? } 
@@ -74,15 +75,10 @@ print '<br clear="all"><hr>';
 foreach($ww->forecast as $t) {
 	$output .= '<li><img border="0" src="' . $t["icon_default"] . '" alt="' . $t["forecast"] . '" />' . $t["label"] . ' - ' . $t["summary"] . ' - ' . $t["forecast"] . '</li>';
 }
-print '<ul>' . $output . '</ul>';
+#print '<ul>' . $output . '</ul>';
 
-print '<br clear="all"><hr>';
+#print '<br clear="all"><hr>';
 
-var_dump($ww->forecast,1);
-
-print '<br clear="all"><hr>';
-
-var_dump($ww,1);
-
+#var_dump($ww->forecast,1);
 
 ?>
