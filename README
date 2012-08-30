@@ -21,16 +21,8 @@ See example.php
 
 CURRENT CONDITIONS
 
-I've only added summary, temp and the icon for current conditions.  
-Feel free to map the other line items from feed (e.g. wind speed, rel humidity etc)
+The full current conditions report is now avilable as current.  Basically current is just a SimpleXML object version of the NOAA XML feed with the addition of the custom_icon field which uses the custom icon mapping.  See example.php for some samples of how to display data from the current conditions.
 
-current_summary
-current_temp
-current_icon_default
-current_icon_custom
-
-the default icon is the one provided by NOAA.  I have added a method to map weather summaries to custom icons.  
-Calling current_icon_custom will grab the custom icon and override the default icon.
 
 FORECAST
 
@@ -98,5 +90,4 @@ object(noaa_weather)#1 (14) {
       ["icon_custom"]=>
       string(41) "http://cdn.wbur.org/images/weather/66.jpg"
     }
-
-
+    
